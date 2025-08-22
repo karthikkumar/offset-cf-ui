@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Search, Filter, Download, Calendar, Store } from 'lucide-react';
+import { Filter, Download, Calendar, Store } from 'lucide-react';
 import { format } from 'date-fns';
 import type { OptIn, OptInFilters } from '@/types';
 
@@ -109,20 +109,6 @@ const TrackingPage = () => {
           : 'bg-gray-100 text-gray-800'
       }`}>
         {status}
-      </span>
-    );
-  };
-
-  const getSourceBadge = (source: string) => {
-    const sourceColors = {
-      widget: 'bg-blue-100 text-blue-800',
-      api: 'bg-purple-100 text-purple-800',
-      manual: 'bg-orange-100 text-orange-800',
-    };
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sourceColors[source as keyof typeof sourceColors]}`}>
-        {source}
       </span>
     );
   };

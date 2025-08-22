@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Store, Plus, Settings, ExternalLink } from 'lucide-react';
+import { Store, Plus, Settings } from 'lucide-react';
 
 const storeSchema = z.object({
   name: z.string().min(2, 'Store name must be at least 2 characters'),
