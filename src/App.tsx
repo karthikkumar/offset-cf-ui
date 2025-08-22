@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Home, Users, Settings, BarChart3 } from 'lucide-react';
+import { Users, Settings, BarChart3, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from '@/assets/logo';
 import MerchantRegistration from '@/pages/MerchantRegistration';
@@ -11,10 +11,10 @@ import TrackingPage from '@/pages/TrackingPage';
 const queryClient = new QueryClient();
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Opt-ins', href: '/tracking', icon: BarChart3 },
   { name: 'Add Merchant', href: '/register', icon: Users },
   { name: 'Configure Widget', href: '/stores', icon: Settings },
-  { name: 'Opt-ins', href: '/tracking', icon: BarChart3 },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard }
 ];
 
 function AppContent() {
