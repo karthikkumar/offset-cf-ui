@@ -1,6 +1,6 @@
-# Offset CF UI
+# Offset CF (Carbon Footprint) UI
 
-A dashboard for managing carbon offset merchant registrations, widget configurations, and customer opt-in tracking.
+offsetCF is a platform to offer and manage Carbon Footprint offset offerings, Shopify merchant registrations, widget configurations, and customer opt-in tracking.
 
 ## Product Overview
 
@@ -48,7 +48,7 @@ npm run build
 
 ```
 src/
-├── components/ui/     # Reusable UI components
+├── components/       # Reusable UI components
 ├── pages/            # Page components
 ├── services/         # API services
 ├── types/            # TypeScript interfaces
