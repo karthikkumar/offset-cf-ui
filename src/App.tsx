@@ -72,10 +72,10 @@ function AppContent() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<TrackingPage />} />
           <Route path="/register" element={<MerchantRegistration />} />
           <Route path="/stores" element={<StoreManagement />} />
-          <Route path="/tracking" element={<TrackingPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
     </div>
