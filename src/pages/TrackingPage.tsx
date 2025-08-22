@@ -172,7 +172,7 @@ const TrackingPage = () => {
               <div>
                 <p className="text-sm font-medium text-gray-500">Estimated Carbon Offset</p>
                 <p className="text-3xl font-bold text-green-600">
-                  {totals.estimated_offset.toFixed(3)} {currency}
+                  {totals.estimated_offset.toFixed(2)} {currency}
                 </p>
               </div>
             </div>
@@ -224,7 +224,7 @@ const TrackingPage = () => {
                       </TableCell>
                       <TableCell>
                         <span className="font-medium text-green-600">
-                          {daily.estimated_offset.toFixed(3)}
+                          {daily.estimated_offset.toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell>
