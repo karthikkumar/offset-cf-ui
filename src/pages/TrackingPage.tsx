@@ -5,121 +5,75 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+
 import { Filter, Download, Calendar, Store } from 'lucide-react';
 import { format } from 'date-fns';
-import type { OptIn, OptInFilters } from '@/types';
+import type { DailyOptInData, OptInFilters } from '@/types';
+import { optInApi } from '@/services/api';
 
 const TrackingPage = () => {
-  const [optIns, setOptIns] = useState<OptIn[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [dailyData, setDailyData] = useState<DailyOptInData[]>([]);
+  const [totals, setTotals] = useState({ opt_ins: 0, estimated_offset: 0 });
+  const [currency, setCurrency] = useState('USD');
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<OptInFilters>({
-    storeId: 'all',
+    store_id: 'ecocart-widget.myshopify.com', // Set default store
     month: format(new Date(), 'yyyy-MM'),
-    status: 'all',
-    search: '',
   });
 
-  // Mock stores data - in real app, this would come from API
+  // Mock stores data - in real app, this would come from store API
   const stores = [
-    { id: '1', name: 'My E-commerce Store' },
-    { id: '2', name: 'Another Store' },
-    { id: '3', name: 'Test Store' },
+    { id: 'ecocart-widget.myshopify.com', name: 'Ecocart Widget' },
+    { id: 'teatotaler.myshopify.com', name: 'Teatotaler' },
   ];
 
-  // Mock opt-ins data - in real app, this would come from API
-  const mockOptIns: OptIn[] = [
-    {
-      id: '1',
-      storeId: '1',
-      storeName: 'My E-commerce Store',
-      merchantId: 'merchant1',
-      merchantName: 'John Doe',
-      customerEmail: 'customer1@example.com',
-      customerName: 'Alice Johnson',
-      optInDate: '2024-01-15T10:30:00Z',
-      source: 'widget',
-      status: 'active',
-    },
-    {
-      id: '2',
-      storeId: '1',
-      storeName: 'My E-commerce Store',
-      merchantId: 'merchant1',
-      merchantName: 'John Doe',
-      customerEmail: 'customer2@example.com',
-      customerName: 'Bob Smith',
-      optInDate: '2024-01-14T15:45:00Z',
-      source: 'api',
-      status: 'active',
-    },
-    {
-      id: '3',
-      storeId: '2',
-      storeName: 'Another Store',
-      merchantId: 'merchant2',
-      merchantName: 'Jane Smith',
-      customerEmail: 'customer3@example.com',
-      customerName: 'Charlie Brown',
-      optInDate: '2024-01-13T09:15:00Z',
-      source: 'widget',
-      status: 'inactive',
-    },
-  ];
+  const fetchOptIns = async () => {
+    if (!filters.store_id) return; // Don't fetch if no store selected
+    
+    setLoading(true);
+    try {
+      const response = await optInApi.getMonthlySummary(filters);
+      setDailyData(response.daily);
+      setTotals(response.totals);
+      setCurrency(response.currency);
+    } catch (error) {
+      console.error('Failed to fetch opt-ins:', error);
+      // Fallback to empty data
+      setDailyData([]);
+      setTotals({ opt_ins: 0, estimated_offset: 0 });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // In real app, this would call the API
-    setOptIns(mockOptIns);
-    setTotal(mockOptIns.length);
-    setTotalPages(Math.ceil(mockOptIns.length / 10));
-  }, []);
+    fetchOptIns();
+  }, [filters]);
 
   const handleFilterChange = (key: keyof OptInFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleSearch = () => {
-    // In real app, this would trigger an API call with the current filters
-    console.log('Searching with filters:', filters);
+    fetchOptIns();
   };
 
   const handleExport = async () => {
     try {
-      // In real app, this would call the export API
-      console.log('Exporting with filters:', filters);
-      // const blob = await optInApi.export(filters);
-      // const url = window.URL.createObjectURL(blob);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = `opt-ins-${filters.month || 'all-time'}.csv`;
-      // a.click();
+      const blob = await optInApi.export(filters);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `opt-ins-${filters.month || 'all-time'}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Export failed:', error);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        status === 'active' 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-gray-100 text-gray-800'
-      }`}>
-        {status}
-      </span>
-    );
-  };
-
-  // Filter opt-ins based on current filters
-  const filteredOptIns = optIns.filter(optIn => {
-    if (filters.storeId !== 'all' && optIn.storeId !== filters.storeId) return false;
-    if (filters.status !== 'all' && optIn.status !== filters.status) return false;
-    if (filters.search && !optIn.customerName?.toLowerCase().includes(filters.search.toLowerCase()) && !optIn.customerEmail.toLowerCase().includes(filters.search.toLowerCase())) return false;
-    return true;
-  });
+  // Use daily data directly from API response
+  const dailyOptIns = dailyData;
 
   return (
     <div className="space-y-6">
@@ -127,7 +81,7 @@ const TrackingPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Opt-ins</h1>
           <p className="text-gray-500">
-            Monitor customer carbon offset opt-ins
+            Monitor and analyze customer carbon offset opt-ins across all your stores
           </p>
         </div>
         <Button onClick={handleExport}>
@@ -144,19 +98,18 @@ const TrackingPage = () => {
             Filters
           </CardTitle>
           <CardDescription>
-            Filter opt-ins by store, month, or status
+            Filter opt-ins by store, month, status, or search terms
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label htmlFor="store">Store</Label>
-              <Select value={filters.storeId} onValueChange={(value) => handleFilterChange('storeId', value)}>
+              <Select value={filters.store_id} onValueChange={(value) => handleFilterChange('store_id', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All stores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All stores</SelectItem>
                   {stores.map((store) => (
                     <SelectItem key={store.id} value={store.id}>
                       {store.name}
@@ -179,26 +132,50 @@ const TrackingPage = () => {
                 />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="flex justify-end mt-4">
-            <Button onClick={handleSearch}>
-              Apply Filters
+            <Button onClick={handleSearch} disabled={loading}>
+              {loading ? 'Loading...' : 'Apply Filters'}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Store className="w-5 h-5 mr-2" />
+            Monthly Summary
+          </CardTitle>
+          <CardDescription>
+            Overview of opt-ins and carbon offset for {filters.month}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Store className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Opt-ins</p>
+                <p className="text-3xl font-bold text-blue-600">{totals.opt_ins}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Estimated Carbon Offset</p>
+                <p className="text-3xl font-bold text-green-600">
+                  {totals.estimated_offset.toFixed(3)} {currency}
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -206,78 +183,58 @@ const TrackingPage = () => {
       {/* Opt-ins Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Opt-ins</CardTitle>
+          <CardTitle>Daily Opt-ins Summary</CardTitle>
           <CardDescription>
-            Showing {filteredOptIns.length} of {total} opt-ins
+            Showing {dailyOptIns?.length} days of data - Total: {totals.opt_ins} opt-ins, {totals.estimated_offset.toFixed(2)} {currency} offset
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Store</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOptIns.map((optIn) => (
-                <TableRow key={optIn.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{optIn.customerName || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{optIn.customerEmail}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Store className="w-4 h-4 text-gray-500" />
-                      <span>{optIn.storeName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(optIn.status)}</TableCell>
-                  <TableCell>
-                    {format(new Date(optIn.optInDate), 'MMM dd, yyyy HH:mm')}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-500">Loading opt-ins...</p>
             </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Daily Opt-ins</TableHead>
+                    <TableHead>Estimated Offset</TableHead>
+                    <TableHead>Currency</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dailyOptIns?.map((daily) => (
+                    <TableRow key={daily.day}>
+                      <TableCell>
+                        <div className="font-medium">
+                          {format(new Date(daily.day), 'MMM dd, yyyy')}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {format(new Date(daily.day), 'EEEE')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Store className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium text-lg">{daily.opt_ins}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium text-green-600">
+                          {daily.estimated_offset.toFixed(3)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-gray-600">{currency}</span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
           )}
         </CardContent>
       </Card>

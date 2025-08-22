@@ -1,7 +1,7 @@
 import axios from 'axios';
-import type { Merchant, Store, OptIn, PaginatedResponse, OptInFilters } from '@/types';
+import type { Merchant, Store, MonthlySummaryResponse, OptInFilters } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.offsetcf.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -52,48 +52,45 @@ export const storeApi = {
 
 // Opt-ins
 export const optInApi = {
-  getPaginated: async (filters: OptInFilters, page: number = 1, limit: number = 10) => {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
+  getMonthlySummary: async (filters: OptInFilters) => {
+    const params = new URLSearchParams();
     
+    let storeId = '';
     // Only add filters that are not 'all'
-    if (filters.storeId && filters.storeId !== 'all') {
-      params.append('storeId', filters.storeId);
+    if (filters.store_id && filters.store_id !== 'all') {
+      storeId = filters.store_id;
     }
     if (filters.month) {
       params.append('month', filters.month);
     }
-    if (filters.status && filters.status !== 'all') {
-      params.append('status', filters.status);
-    }
-    if (filters.search) {
-      params.append('search', filters.search);
+    
+    // Ensure we have a storeId before making the API call
+    if (!storeId) {
+      throw new Error('Store ID is required');
     }
     
-    const response = await api.get<PaginatedResponse<OptIn>>(`/opt-ins?${params}`);
+    const response = await api.get<MonthlySummaryResponse>(`/v1/merchant/${storeId}/monthly-summary?${params}`);
     return response.data;
   },
 
   export: async (filters: OptInFilters) => {
     const params = new URLSearchParams();
     
+    let storeId = '';
     // Only add filters that are not 'all'
-    if (filters.storeId && filters.storeId !== 'all') {
-      params.append('storeId', filters.storeId);
+    if (filters.store_id && filters.store_id !== 'all') {
+      storeId = filters.store_id;
     }
     if (filters.month) {
       params.append('month', filters.month);
     }
-    if (filters.status && filters.status !== 'all') {
-      params.append('status', filters.status);
-    }
-    if (filters.search) {
-      params.append('search', filters.search);
+    
+    // Ensure we have a storeId before making the API call
+    if (!storeId) {
+      throw new Error('Store ID is required');
     }
     
-    const response = await api.get(`/opt-ins/export?${params}`, {
+    const response = await api.get(`/v1/merchant/${storeId}/monthly-summary/export?${params}`, {
       responseType: 'blob',
     });
     return response.data;

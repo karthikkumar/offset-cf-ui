@@ -27,17 +27,21 @@ export interface WidgetConfig {
   customMessage?: string;
 }
 
-export interface OptIn {
-  id: string;
-  storeId: string;
-  storeName: string;
-  merchantId: string;
-  merchantName: string;
-  customerEmail: string;
-  customerName?: string;
-  optInDate: string;
-  source: 'widget' | 'api' | 'manual';
-  status: 'active' | 'inactive';
+export interface DailyOptInData {
+  day: string;
+  opt_ins: number;
+  estimated_offset: number;
+}
+
+export interface MonthlySummaryResponse {
+  store: string;
+  month: string;
+  currency: string;
+  totals: {
+    opt_ins: number;
+    estimated_offset: number;
+  };
+  daily: DailyOptInData[];
 }
 
 export interface PaginatedResponse<T> {
@@ -49,8 +53,6 @@ export interface PaginatedResponse<T> {
 }
 
 export interface OptInFilters {
-  storeId?: 'all' | string;
+  store_id?: string;
   month?: string; // YYYY-MM format
-  status?: 'all' | string;
-  search?: string;
 }
