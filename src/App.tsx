@@ -11,10 +11,10 @@ import TrackingPage from '@/pages/TrackingPage';
 const queryClient = new QueryClient();
 
 const navigation = [
-  { name: 'Opt-ins', href: '/tracking', icon: BarChart3 },
+  { name: 'Opt-ins', href: '/', icon: BarChart3 },
   { name: 'Add Merchant', href: '/register', icon: Users },
   { name: 'Configure Widget', href: '/stores', icon: Settings },
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard }
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }
 ];
 
 function AppContent() {
